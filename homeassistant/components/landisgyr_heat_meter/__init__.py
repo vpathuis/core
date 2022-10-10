@@ -11,7 +11,7 @@ from homeassistant.const import CONF_DEVICE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import DOMAIN
+from .const import DOMAIN, POLLING_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,7 +37,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         _LOGGER,
         name="ultraheat_gateway",
         update_method=async_update_data,
-        update_interval=timedelta(days=1),
+        update_interval=timedelta(hours=entry.data[POLLING_INTERVAL]),
     )
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator

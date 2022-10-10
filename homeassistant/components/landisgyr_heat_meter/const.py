@@ -9,6 +9,7 @@ from homeassistant.const import ENERGY_MEGA_WATT_HOUR, TEMP_CELSIUS, VOLUME_CUBI
 from homeassistant.helpers.entity import EntityCategory
 
 DOMAIN = "landisgyr_heat_meter"
+POLLING_INTERVAL = "polling_interval"
 
 GJ_TO_MWH = 0.277778  # conversion factor
 ULTRAHEAT_TIMEOUT = 30  # reading the IR port can take some time

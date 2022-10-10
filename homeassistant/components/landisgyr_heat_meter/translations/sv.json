@@ -10,12 +10,14 @@
         "step": {
             "setup_serial_manual_path": {
                 "data": {
-                    "device": "USB-enhetens s\u00f6kv\u00e4g"
+                    "device": "USB-enhetens s\u00f6kv\u00e4g",
+                    "polling_interval": "Uppdateringsfrekvens (default=24h)"
                 }
             },
             "user": {
                 "data": {
-                    "device": "V\u00e4lj enhet"
+                    "device": "V\u00e4lj enhet",
+                    "polling_interval": "Uppdateringsfrekvens (default=24h)"
                 }
             }
         }

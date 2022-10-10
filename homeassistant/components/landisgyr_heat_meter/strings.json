@@ -3,12 +3,14 @@
     "step": {
       "user": {
         "data": {
-          "device": "Select device"
+          "device": "Select device",
+          "polling_interval": "Polling interval (default = 24h)"
         }
       },
       "setup_serial_manual_path": {
         "data": {
-          "device": "[%key:common::config_flow::data::usb_path%]"
+          "device": "[%key:common::config_flow::data::usb_path%]",
+          "polling_interval": "Polling interval (default = 24h)"
         }
       }
     },

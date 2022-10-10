@@ -14,7 +14,7 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_DEVICE
 from homeassistant.exceptions import HomeAssistantError
 
-from .const import DOMAIN, ULTRAHEAT_TIMEOUT
+from .const import DOMAIN, ULTRAHEAT_TIMEOUT, POLLING_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -23,6 +23,7 @@ CONF_MANUAL_PATH = "Enter Manually"
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_DEVICE): str,
+        vol.Required(POLLING_INTERVAL): vol.Coerce(int)
     }
 )
 
@@ -46,13 +47,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             _LOGGER.debug("Using this path : %s", dev_path)
 
             try:
-                return await self.validate_and_create_entry(dev_path)
+                return await self.validate_and_create_entry(dev_path, user_input.get(POLLING_INTERVAL))
             except CannotConnect:
                 errors["base"] = "cannot_connect"
 
         ports = await self.get_ports()
 
-        schema = vol.Schema({vol.Required(CONF_DEVICE): vol.In(ports)})
+        schema = vol.Schema({vol.Required(CONF_DEVICE): vol.In(ports), vol.Required(POLLING_INTERVAL,default=24): vol.Coerce(int)})
         return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
 
     async def async_step_setup_serial_manual_path(self, user_input=None):
@@ -66,14 +67,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except CannotConnect:
                 errors["base"] = "cannot_connect"
 
-        schema = vol.Schema({vol.Required(CONF_DEVICE): str})
+        schema = vol.Schema({vol.Required(CONF_DEVICE): str, vol.Required(POLLING_INTERVAL,default=24): vol.Coerce(int)})
         return self.async_show_form(
             step_id="setup_serial_manual_path",
             data_schema=schema,
             errors=errors,
         )
 
-    async def validate_and_create_entry(self, dev_path):
+    async def validate_and_create_entry(self, dev_path, polling_interval):
         """Try to connect to the device path and return an entry."""
         model, device_number = await self.validate_ultraheat(dev_path)
 
@@ -84,6 +85,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             CONF_DEVICE: dev_path,
             "model": model,
             "device_number": device_number,
+            POLLING_INTERVAL: polling_interval
         }
         return self.async_create_entry(
             title=model,
