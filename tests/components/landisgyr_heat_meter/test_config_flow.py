@@ -50,17 +50,22 @@ async def test_manual_entry(mock_heat_meter, hass: HomeAssistant) -> None:
     assert result["step_id"] == "setup_serial_manual_path"
     assert result["errors"] == {}
 
-    with patch(
-        "homeassistant.components.landisgyr_heat_meter.async_setup_entry",
-        return_value=True,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"device": "/dev/ttyUSB0"}
-        )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"device": "/dev/ttyUSB0"}
+    )
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "battery_or_mains"
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"battery_operated": True}
+    )
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == "LUGCUH50"
     assert result["data"] == {
+        "battery_operated": True,
         "device": "/dev/ttyUSB0",
         "model": "LUGCUH50",
         "device_number": "123456789",
@@ -85,9 +90,19 @@ async def test_list_entry(mock_port, mock_heat_meter, hass: HomeAssistant) -> No
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {"device": port.device}
     )
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "battery_or_mains"
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"battery_operated": False}
+    )
+
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == "LUGCUH50"
     assert result["data"] == {
+        "battery_operated": False,
         "device": port.device,
         "model": "LUGCUH50",
         "device_number": "123456789",
@@ -115,16 +130,20 @@ async def test_manual_entry_fail(mock_heat_meter, hass: HomeAssistant) -> None:
     assert result["step_id"] == "setup_serial_manual_path"
     assert result["errors"] == {}
 
-    with patch(
-        "homeassistant.components.landisgyr_heat_meter.async_setup_entry",
-        return_value=True,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"device": "/dev/ttyUSB0"}
-        )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"device": "/dev/ttyUSB0"}
+    )
 
     assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "setup_serial_manual_path"
+    assert result["step_id"] == "battery_or_mains"
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"battery_operated": False}
+    )
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "battery_or_mains"
     assert result["errors"] == {"base": "cannot_connect"}
 
 
@@ -146,8 +165,17 @@ async def test_list_entry_fail(mock_port, mock_heat_meter, hass: HomeAssistant) 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {"device": port.device}
     )
+
     assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "user"
+    assert result["step_id"] == "battery_or_mains"
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"battery_operated": False}
+    )
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "battery_or_mains"
     assert result["errors"] == {"base": "cannot_connect"}
 
 
@@ -181,9 +209,19 @@ async def test_get_serial_by_id_realpath(
             result = await hass.config_entries.flow.async_configure(
                 result["flow_id"], {"device": port.device}
             )
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "battery_or_mains"
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"battery_operated": True}
+    )
+
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == "LUGCUH50"
     assert result["data"] == {
+        "battery_operated": True,
         "device": port.device,
         "model": "LUGCUH50",
         "device_number": "123456789",
@@ -218,9 +256,19 @@ async def test_get_serial_by_id_dev_path(
             result = await hass.config_entries.flow.async_configure(
                 result["flow_id"], {"device": port.device}
             )
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "battery_or_mains"
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"battery_operated": True}
+    )
+
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == "LUGCUH50"
     assert result["data"] == {
+        "battery_operated": True,
         "device": port.device,
         "model": "LUGCUH50",
         "device_number": "123456789",

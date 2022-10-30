@@ -1,5 +1,7 @@
 """Constants for the Landis+Gyr Heat Meter integration."""
 
+from datetime import timedelta
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntityDescription,
@@ -9,9 +11,13 @@ from homeassistant.const import ENERGY_MEGA_WATT_HOUR, TEMP_CELSIUS, VOLUME_CUBI
 from homeassistant.helpers.entity import EntityCategory
 
 DOMAIN = "landisgyr_heat_meter"
+CONF_BATTERY_OPERATED = "battery_operated"
 
 GJ_TO_MWH = 0.277778  # conversion factor
 ULTRAHEAT_TIMEOUT = 30  # reading the IR port can take some time
+
+POLLING_INTERVAL_BATTERY = timedelta(days=1)
+POLLING_INTERVAL_MAINS = timedelta(hours=1)
 
 HEAT_METER_SENSOR_TYPES = (
     SensorEntityDescription(

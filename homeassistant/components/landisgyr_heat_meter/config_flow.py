@@ -13,8 +13,9 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import CONF_DEVICE
 from homeassistant.exceptions import HomeAssistantError
+import homeassistant.helpers.config_validation as cv
 
-from .const import DOMAIN, ULTRAHEAT_TIMEOUT
+from .const import CONF_BATTERY_OPERATED, DOMAIN, ULTRAHEAT_TIMEOUT
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,6 +33,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    def __init__(self) -> None:
+        """Initialize the ConfigFlow."""
+        super().__init__()
+        self.dev_path = None
+        self.battery_operated = None
+
     async def async_step_user(self, user_input=None):
         """Step when setting up serial configuration."""
         errors = {}
@@ -40,15 +47,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if user_input[CONF_DEVICE] == CONF_MANUAL_PATH:
                 return await self.async_step_setup_serial_manual_path()
 
-            dev_path = await self.hass.async_add_executor_job(
+            self.dev_path = await self.hass.async_add_executor_job(
                 get_serial_by_id, user_input[CONF_DEVICE]
             )
-            _LOGGER.debug("Using this path : %s", dev_path)
+            _LOGGER.debug("Using this path : %s", self.dev_path)
 
-            try:
-                return await self.validate_and_create_entry(dev_path)
-            except CannotConnect:
-                errors["base"] = "cannot_connect"
+            return await self.async_step_battery_or_mains()
 
         ports = await self.get_ports()
 
@@ -60,11 +64,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is not None:
-            dev_path = user_input[CONF_DEVICE]
-            try:
-                return await self.validate_and_create_entry(dev_path)
-            except CannotConnect:
-                errors["base"] = "cannot_connect"
+            self.dev_path = user_input[CONF_DEVICE]
+
+            return await self.async_step_battery_or_mains()
 
         schema = vol.Schema({vol.Required(CONF_DEVICE): str})
         return self.async_show_form(
@@ -73,15 +75,36 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def validate_and_create_entry(self, dev_path):
+    async def async_step_battery_or_mains(self, user_input=None):
+        """Let the user choose if the device is battery operated."""
+        errors = {}
+
+        if user_input is not None:
+            self.battery_operated = user_input[CONF_BATTERY_OPERATED]
+            try:
+                return await self.validate_and_create_entry()
+            except CannotConnect:
+                errors["base"] = "cannot_connect"
+
+        schema = vol.Schema(
+            {vol.Required(CONF_BATTERY_OPERATED, default=True): cv.boolean}
+        )
+        return self.async_show_form(
+            step_id="battery_or_mains",
+            data_schema=schema,
+            errors=errors,
+        )
+
+    async def validate_and_create_entry(self):
         """Try to connect to the device path and return an entry."""
-        model, device_number = await self.validate_ultraheat(dev_path)
+        model, device_number = await self.validate_ultraheat(self.dev_path)
 
         _LOGGER.debug("Got model %s and device_number %s", model, device_number)
         await self.async_set_unique_id(device_number)
         self._abort_if_unique_id_configured()
         data = {
-            CONF_DEVICE: dev_path,
+            CONF_DEVICE: self.dev_path,
+            CONF_BATTERY_OPERATED: self.battery_operated,
             "model": model,
             "device_number": device_number,
         }
