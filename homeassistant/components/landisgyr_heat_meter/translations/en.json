@@ -8,15 +8,26 @@
             "unknown": "Unexpected error"
         },
         "step": {
+            "battery_or_mains": {
+                "data": {
+                    "battery_operated": "The Landis+Gyr Heat Meter is battery operated"
+                },
+                "description": "If the Landis+Gyr is on batteries make sure this is checked and polling will be once daily. Only uncheck this if the device is mains powered and polling will be every hour. Polling can be further customized using automation, if required.",
+                "title": "Battery or mains"
+            },
             "setup_serial_manual_path": {
                 "data": {
                     "device": "USB Device Path"
-                }
+                },
+                "description": "Setup the path for the USB IR-device communicating with the Landis+Gyr",
+                "title": "Manual path"
             },
             "user": {
                 "data": {
                     "device": "Select device"
-                }
+                },
+                "description": "Setup the USB IR-device for communicating with the Landis+Gyr",
+                "title": "Setup Landis+Gyr Heat Meter"
             }
         }
     }
