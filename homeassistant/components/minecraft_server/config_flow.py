@@ -7,7 +7,7 @@ import getmac
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_ID, CONF_NAME, CONF_PORT
 
 from . import MinecraftServer, helpers
 from .const import DEFAULT_HOST, DEFAULT_NAME, DEFAULT_PORT, DOMAIN
@@ -25,6 +25,7 @@ class MinecraftServerConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             host = None
             port = DEFAULT_PORT
+            custom_id = user_input[CONF_ID]
             # Split address at last occurrence of ':'.
             address_left, separator, address_right = user_input[CONF_HOST].rpartition(
                 ":"
@@ -62,7 +63,7 @@ class MinecraftServerConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
 
             # Validate IP address (MAC address must be available).
-            if ip_address is not None and mac_address is None:
+            if ip_address is not None and mac_address is None and custom_id is None:
                 errors["base"] = "invalid_ip"
             # Validate port configuration (limit to user and dynamic port range).
             elif (port < 1024) or (port > 65535):
@@ -84,7 +85,12 @@ class MinecraftServerConfigFlow(ConfigFlow, domain=DOMAIN):
                     # Build unique_id and config entry title.
                     unique_id = ""
                     title = f"{host}:{port}"
-                    if ip_address is not None:
+                    if custom_id is not None:
+                        # Allow flexibility and use a custom id, because getting mac can fail
+                        unique_id = custom_id
+                        if ip_address.version == 6:
+                            title = f"[{host}]:{port}"
+                    elif ip_address is not None:
                         # Since IP addresses can change and therefore are not allowed in a
                         # unique_id, fall back to the MAC address and port (to support
                         # servers with same MAC address but different ports).
@@ -131,6 +137,9 @@ class MinecraftServerConfigFlow(ConfigFlow, domain=DOMAIN):
                     vol.Required(
                         CONF_HOST, default=user_input.get(CONF_HOST, DEFAULT_HOST)
                     ): vol.All(str, vol.Lower),
+                    vol.Optional(CONF_ID, default=user_input.get(CONF_ID)): vol.All(
+                        str, vol.Lower
+                    ),
                 }
             ),
             errors=errors,
