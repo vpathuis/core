@@ -43,36 +43,44 @@ class MinecraftServerConfigFlow(ConfigFlow, domain=DOMAIN):
             with suppress(ValueError):
                 ip_address = ipaddress.ip_address(host)
 
-            # Create server instance with configuration data and ping the server.
-            config_data = {
-                CONF_NAME: user_input[CONF_NAME],
-                CONF_HOST: host,
-                CONF_PORT: port,
-            }
-            server = MinecraftServer(self.hass, "dummy_unique_id", config_data)
-            await server.async_check_connection()
-            if not server.online:
-                # Host or port invalid or server not reachable.
-                errors["base"] = "cannot_connect"
-            else:
-                # Build config entry title.
-                title = f"{host}:{port}"
-                if ip_address is not None:
-                    # Since IP addresses can change and therefore are not allowed
-                    # in a unique_id, fall back to the MAC address and port (to
-                    # support servers with same MAC address but different ports).
-                    if ip_address.version == 6:
-                        title = f"[{host}]:{port}"
-                else:
-                    # Check if 'host' is a valid SRV record.
-                    srv_record = await helpers.async_check_srv_record(self.hass, host)
-                    if srv_record is not None:
-                        # Use only SRV host name in unique_id (does not change).
-                        title = host
+            # Validate port configuration (limit to user and dynamic port range).
+            if (port < 1024) or (port > 65535):
+                errors["base"] = "invalid_port"
+            # Validate host and port by checking the server connection.
 
-                # Configuration data are available and no error was detected,
-                # create configuration entry.
-                return self.async_create_entry(title=title, data=config_data)
+            else:
+                # Create server instance with configuration data and ping the server.
+                config_data = {
+                    CONF_NAME: user_input[CONF_NAME],
+                    CONF_HOST: host,
+                    CONF_PORT: port,
+                }
+                server = MinecraftServer(self.hass, "dummy_unique_id", config_data)
+                await server.async_check_connection()
+                if not server.online:
+                    # Host or port invalid or server not reachable.
+                    errors["base"] = "cannot_connect"
+                else:
+                    # Build config entry title.
+                    title = f"{host}:{port}"
+                    if ip_address is not None:
+                        # Since IP addresses can change and therefore are not allowed
+                        # in a unique_id, fall back to the MAC address and port (to
+                        # support servers with same MAC address but different ports).
+                        if ip_address.version == 6:
+                            title = f"[{host}]:{port}"
+                    else:
+                        # Check if 'host' is a valid SRV record.
+                        srv_record = await helpers.async_check_srv_record(
+                            self.hass, host
+                        )
+                        if srv_record is not None:
+                            # Use only SRV host name in unique_id (does not change).
+                            title = host
+
+                    # Configuration data are available and no error was detected,
+                    # create configuration entry.
+                    return self.async_create_entry(title=title, data=config_data)
 
         # Show configuration form (default form in case of no user_input,
         # form filled with user_input and eventually with errors otherwise).
