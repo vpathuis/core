@@ -31,8 +31,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     domain_data = hass.data.setdefault(DOMAIN, {})
 
     # Create and store server instance.
-    assert entry.unique_id
-    unique_id = entry.unique_id
+    unique_id = entry.entry_id
     _LOGGER.debug(
         "Creating server instance for '%s' (%s)",
         entry.data[CONF_NAME],
@@ -51,7 +50,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Unload Minecraft Server config entry."""
-    unique_id = config_entry.unique_id
+    unique_id = config_entry.entry_id
     server = hass.data[DOMAIN][unique_id]
 
     # Unload platforms.
