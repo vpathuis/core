@@ -102,7 +102,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def validate_ultraheat(self, port: str) -> tuple[str, str]:
         """Validate the user input allows us to connect."""
 
-        reader = ultraheat_api.UltraheatReader(port)
+        # reader = ultraheat_api.UltraheatReader(port)
+        # The following line will trigger reading from file rather than from serial connection
+        reader = ultraheat_api.FileReader(
+            "/config/custom_components/landisgyr_heat_meter/LUGCUH50_dummy.txt"
+        )
         heat_meter = ultraheat_api.HeatMeterService(reader)
         try:
             async with async_timeout.timeout(ULTRAHEAT_TIMEOUT):

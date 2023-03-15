@@ -22,7 +22,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up heat meter from a config entry."""
 
     _LOGGER.debug("Initializing %s integration on %s", DOMAIN, entry.data[CONF_DEVICE])
-    reader = ultraheat_api.UltraheatReader(entry.data[CONF_DEVICE])
+    # reader = ultraheat_api.UltraheatReader(entry.data[CONF_DEVICE])
+    # The following line will trigger reading from file rather than from serial connection
+    reader = ultraheat_api.FileReader(
+        "/config/custom_components/landisgyr_heat_meter/LUGCUH50_dummy.txt"
+    )
     api = ultraheat_api.HeatMeterService(reader)
 
     coordinator = UltraheatCoordinator(hass, api)
