@@ -321,7 +321,7 @@ class HeatMeterSensor(
         self.entity_description = description
         self._attr_device_info = device
 
-        _LOGGER.debug("Created %s with value: %s", self.key, self.native_value)
+        _LOGGER.info("Created %s with value: %s", self.key, self.native_value)
 
         if (
             description.native_unit_of_measurement
